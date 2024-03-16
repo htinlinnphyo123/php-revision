@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+</head>
+<body>
+
+	Hello world
+
+
+	<script type="text/javascript">
+
+		//encapsulation (fully encapsulation)
+		function object(){
+
+			var card;
+
+			function setter(d){
+				card = d;
+			}
+			function getter(){
+				return card;
+			}
+
+			return {
+				setter,
+				getter
+			};
+
+		};
+
+		var obj = new object();
+		obj.setter("hello world");
+		console.log(obj.getter());
+
+		//inheritance(prototype inheritance)
+		function Engine(){
+			this.motors = [];
+		}
+		function Car(){
+			this.logo = 'suzake';
+		}
+		Car.prototype = new Engine();
+
+		let c1 = new Car();
+		let c2 = new Car();
+
+		// c1.motors = ['c1 logo'];
+		c1.motors.push(100);
+		console.log(c1.motors);
+		console.log(c2.motors);
+
+
+	</script>
+</body>
+</html>
+
+CREATE 
+    ALGORITHM = UNDEFINED 
+    DEFINER = `root`@`localhost` 
+    SQL SECURITY DEFINER
+VIEW `prod_elplatform`.`v_student_chapter_finished` AS
+    SELECT 
+        `test`.`user_id` AS `user_id`,
+        GROUP_CONCAT(`test`.`course_id`
+            SEPARATOR ',') AS `courses`,
+        GROUP_CONCAT(`test`.`finish_count`
+            SEPARATOR ',') AS `finished_chapters_count`,
+        GROUP_CONCAT(`test`.`total_chapters`
+            SEPARATOR ',') AS `total_chapters_count`
+    FROM
+        (SELECT 
+            `prod_elplatform`.`purchased_courses`.`course_id` AS `course_id`,
+                `prod_elplatform`.`purchased_courses`.`user_id` AS `user_id`,
+                COALESCE(`complete_list`.`finish_count`, 0) AS `finish_count`,
+                `prod_elplatform`.`courses`.`total_chapters` AS `total_chapters`
+        FROM
+            ((`prod_elplatform`.`purchased_courses`
+        LEFT JOIN `prod_elplatform`.`courses` ON ((`prod_elplatform`.`courses`.`id` = `prod_elplatform`.`purchased_courses`.`course_id`)))
+        LEFT JOIN (SELECT 
+            `prod_elplatform`.`chapter_status`.`course_id` AS `course_id`,
+                `prod_elplatform`.`chapter_status`.`user_id` AS `user_id`,
+                COUNT(0) AS `finish_count`
+        FROM
+            `prod_elplatform`.`chapter_status`
+        WHERE
+            (`prod_elplatform`.`chapter_status`.`status` = 'complete')
+        GROUP BY `prod_elplatform`.`chapter_status`.`course_id` , `prod_elplatform`.`chapter_status`.`user_id`) `complete_list` ON (((`prod_elplatform`.`purchased_courses`.`course_id` = `complete_list`.`course_id`)
+            AND (`prod_elplatform`.`purchased_courses`.`user_id` = `complete_list`.`user_id`))))) `test`
+    GROUP BY `test`.`user_id`
